@@ -503,6 +503,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#portainer" title="Portainer" class="md-nav__link">
+    Portainer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-autodiscover-setup-type" title="Change autodiscover setup type" class="md-nav__link">
+    Change autodiscover setup type
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#why-bind" title="Why Bind?" class="md-nav__link">
     Why Bind?
   </a>
@@ -788,13 +802,11 @@ MariaDB [(none)]&gt; FLUSH PRIVILEGES;
 <p>Running <code>docker-compose down -v</code> will <strong>destroy all mailcow: dockerized volumes</strong> and delete any related containers.</p>
 <h2 id="reset-admin-password">Reset admin password<a class="headerlink" href="#reset-admin-password" title="Permanent link">&para;</a></h2>
 <p>Reset mailcow admin to <code>admin:moohoo</code>:</p>
-<p>1. Drop admin table</p>
-<div class="codehilite"><pre><span></span>source mailcow.conf
-docker-compose exec mysql-mailcow mysql -u<span class="cp">${</span><span class="n">DBUSER</span><span class="cp">}</span> -p<span class="cp">${</span><span class="n">DBPASS</span><span class="cp">}</span> <span class="cp">${</span><span class="n">DBNAME</span><span class="cp">}</span> -e &quot;DROP TABLE admin;&quot;
+<div class="codehilite"><pre><span></span>cd mailcow_path
+bash reset_admin.sh
 </pre></div>
 
 
-<p>2. Open mailcow UI to auto-init the db</p>
 <h2 id="rspamd">Rspamd<a class="headerlink" href="#rspamd" title="Permanent link">&para;</a></h2>
 <h3 id="learn-spam-and-ham">Learn spam and ham<a class="headerlink" href="#learn-spam-and-ham" title="Permanent link">&para;</a></h3>
 <p>Rspamd learns mail as spam or ham when you move a message in or out of the junk folder to any mailbox besides trash.
@@ -913,6 +925,64 @@ The API ID, API key and the first 12 characters (your YubiKeys ID in modhex) are
 <p>Only Google Chrome (+derivates) and Opera support U2F authentication to this day natively.
 For Firefox you will need to install the "U2F Support Add-on" as provided on <a href="https://addons.mozilla.org/en-US/firefox/addon/u2f-support-add-on/">mozilla.org</a>.</p>
 <p>U2F works without an internet connection.</p>
+<h2 id="portainer">Portainer<a class="headerlink" href="#portainer" title="Permanent link">&para;</a></h2>
+<p>In order to enable Portainer, the docker-compose.yml and site.conf for nginx must be modified.</p>
+<p>1. docker-compose.yml: Insert this block for portainer</p>
+<div class="codehilite"><pre><span></span>    portainer-mailcow:
+      image: portainer/portainer
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+      restart: always
+      dns:
+        - 172.22.1.254
+      dns_search: mailcow-network
+      networks:
+        mailcow-network:
+          aliases:
+            - portainer
+</pre></div>
+
+
+<p>2a. data/conf/nginx/site.conf: Just beneath the opening line, at the same level as a server { block, add this:</p>
+<div class="codehilite"><pre><span></span><span class="nt">upstream</span> <span class="nt">portainer</span> <span class="p">{</span>
+  <span class="err">server</span> <span class="n">portainer-mailcow</span><span class="p">:</span><span class="mi">9000</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">map</span> <span class="o">$</span><span class="nt">http_upgrade</span> <span class="o">$</span><span class="nt">connection_upgrade</span> <span class="p">{</span>
+  <span class="err">default</span> <span class="err">upgrade</span><span class="p">;</span>
+  <span class="err">&#39;&#39;</span> <span class="err">close</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>2b. data/conf/nginx/site.conf: Then, inside <strong>both</strong> (ssl and plain) server blocks, add this:</p>
+<div class="codehilite"><pre><span></span>  <span class="nt">location</span> <span class="o">/</span><span class="nt">portainer</span><span class="o">/</span> <span class="p">{</span>
+    <span class="err">proxy_http_version</span> <span class="err">1.1</span><span class="p">;</span>
+    <span class="err">proxy_set_header</span> <span class="err">Host</span>              <span class="err">$http_host</span><span class="p">;</span>   <span class="err">#</span> <span class="err">required</span> <span class="err">for</span> <span class="err">docker</span> <span class="err">client&#39;s</span> <span class="err">sake</span>
+    <span class="err">proxy_set_header</span> <span class="err">X-Real-IP</span>         <span class="err">$remote_addr</span><span class="p">;</span> <span class="err">#</span> <span class="err">pass</span> <span class="err">on</span> <span class="err">real</span> <span class="err">client&#39;s</span> <span class="err">IP</span>
+    <span class="err">proxy_set_header</span> <span class="err">X-Forwarded-For</span>   <span class="err">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+    <span class="err">proxy_set_header</span> <span class="err">X-Forwarded-Proto</span> <span class="err">$scheme</span><span class="p">;</span>
+    <span class="err">proxy_read_timeout</span>                 <span class="err">900</span><span class="p">;</span>
+
+    <span class="err">proxy_set_header</span> <span class="err">Connection</span> <span class="err">&quot;&quot;</span><span class="p">;</span>
+    <span class="err">proxy_buffers</span> <span class="err">32</span> <span class="err">4k</span><span class="p">;</span>
+    <span class="err">proxy_pass</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">portainer</span><span class="o">/</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nt">location</span> <span class="o">/</span><span class="nt">portainer</span><span class="o">/</span><span class="nt">api</span><span class="o">/</span><span class="nt">websocket</span><span class="o">/</span> <span class="p">{</span>
+    <span class="err">proxy_http_version</span> <span class="err">1.1</span><span class="p">;</span>
+    <span class="err">proxy_set_header</span> <span class="err">Upgrade</span> <span class="err">$http_upgrade</span><span class="p">;</span>
+    <span class="err">proxy_set_header</span> <span class="err">Connection</span> <span class="err">$connection_upgrade</span><span class="p">;</span>
+    <span class="err">proxy_pass</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">portainer</span><span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">websocket</span><span class="o">/</span><span class="p">;</span>
+  <span class="p">}</span>
+</pre></div>
+
+
+<p>Now you can simply navigate to https://${MAILCOW_HOSTNAME}/portainer/ to view your Portainer container monitoring page. You’ll then be prompted to specify a new password for the <strong>admin</strong> account. After specifying your password, you’ll then be able to connect to the Portainer UI.</p>
+<h2 id="change-autodiscover-setup-type">Change autodiscover setup type<a class="headerlink" href="#change-autodiscover-setup-type" title="Permanent link">&para;</a></h2>
+<p>This disables ActiveSync in the autodiscover service for Outlook and configures it with IMAP and SMTP instead:</p>
+<p>Open <code>data/web/autodiscover.php</code> and set <code>'useEASforOutlook' =&gt; 'yes'</code> to <code>'useEASforOutlook' =&gt; 'no'</code>.</p>
+<p>To always use IMAP and SMTP instead of EAS, set <code>'autodiscoverType' =&gt; 'imap'</code>.</p>
 <h2 id="why-bind">Why Bind?<a class="headerlink" href="#why-bind" title="Permanent link">&para;</a></h2>
 <p>For DNS blacklist lookups and DNSSEC.</p>
 <p>Most systems use either a public or a local caching DNS resolver.
