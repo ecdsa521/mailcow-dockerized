@@ -287,6 +287,19 @@
     Optional: Setup a relayhost
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helper-script" title="Helper script" class="md-nav__link">
+    Helper script
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -432,6 +445,19 @@
     Optional: Setup a relayhost
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helper-script" title="Helper script" class="md-nav__link">
+    Helper script
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -513,8 +539,8 @@
 </pre></div>
 
 
-<p>2. Make sure you set <code>HTTP_BIND=0.0.0.0</code> and <code>HTTP_PORT=80</code> in <code>mailcow.conf</code> or setup a reverse proxy to enable connections to port 80. If you changed HTTP_BIND, then restart Nginx:</p>
-<div class="codehilite"><pre><span></span>docker-compose restart nginx-mailcow
+<p>2. Make sure you set <code>HTTP_BIND=0.0.0.0</code> and <code>HTTP_PORT=80</code> in <code>mailcow.conf</code> or setup a reverse proxy to enable connections to port 80. If you changed HTTP_BIND, then rebuild Nginx:</p>
+<div class="codehilite"><pre><span></span>docker-compose up -d
 </pre></div>
 
 
@@ -532,6 +558,7 @@ certbot certonly <span class="se">\</span>
 </pre></div>
 
 
+<p><strong>Remember to replace the example.org domain with your own domain, this command will not work if you dont.</strong></p>
 <p>4. Create hard links to the full path of the new certificates. Assuming you are still in the mailcow root folder:</p>
 <div class="codehilite"><pre><span></span>mv data/assets/ssl/cert.<span class="o">{</span>pem,pem.backup<span class="o">}</span>
 mv data/assets/ssl/key.<span class="o">{</span>pem,pem.backup<span class="o">}</span>
@@ -642,6 +669,19 @@ smtp_sasl_auth_enable = yes
 docker-compose exec postfix-mailcow chown root:postfix /opt/postfix/conf/smarthost_passwd /opt/postfix/conf/smarthost_passwd.db
 docker-compose exec postfix-mailcow chmod 660 /opt/postfix/conf/smarthost_passwd /opt/postfix/conf/smarthost_passwd.db
 docker-compose exec postfix-mailcow postfix reload
+</pre></div>
+
+
+<h3 id="helper-script">Helper script<a class="headerlink" href="#helper-script" title="Permanent link">&para;</a></h3>
+<p>There is a helper script <code>mailcow-setup-relayhost.sh</code> you can run to setup a relayhost.</p>
+<div class="codehilite"><pre><span></span>Usage:
+
+Setup a relayhost:
+./mailcow-setup-relayhost.sh relayhost port <span class="o">(</span>username<span class="o">)</span> <span class="o">(</span>password<span class="o">)</span>
+Username and password are optional parameters.
+
+Reset to defaults:
+./mailcow-setup-relayhost.sh reset
 </pre></div>
 
 

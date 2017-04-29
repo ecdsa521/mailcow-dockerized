@@ -318,9 +318,11 @@
 <h2 id="screenshots">Screenshots<a class="headerlink" href="#screenshots" title="Permanent link">&para;</a></h2>
 <p>You can find screenshots <a href="http://imgur.com/a/oewYt">on Imgur</a>.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>mailcow dockerized comes with <strong>11 containers</strong> linked in <strong>one bridged network</strong>.</p>
+<p>mailcow dockerized comes with <strong>12 containers</strong> linked in <strong>one bridged network</strong>.
+Each container represents a single application.</p>
 <ul>
 <li>Dovecot</li>
+<li>ClamAV</li>
 <li>Memcached</li>
 <li>Redis</li>
 <li>MySQL</li>
@@ -332,7 +334,7 @@
 <li>Rspamd</li>
 <li>SOGo</li>
 </ul>
-<p><strong>6 volumes</strong> to keep dynamic data - take care of them!</p>
+<p><strong>7 volumes</strong> to keep dynamic data - take care of them!</p>
 <ul>
 <li>vmail-vol-1</li>
 <li>dkim-vol-1</li>
@@ -354,6 +356,7 @@
 <li>imapsync to migrate or pull remote mailboxes regularly</li>
 <li>TFA: Yubi OTP and U2F USB (Google Chrome and derivates only)</li>
 <li>Add domains, mailboxes, aliases, domain aliases and SOGo resources</li>
+<li>Add whitelisted hosts to forward mail to mailcow</li>
 </ul>
 <p><em><a href="https://www.servercow.de">Looking for a farm to host your cow?</a></em> </p>
               
