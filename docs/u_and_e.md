@@ -526,34 +526,34 @@ With Gogs' possibility to authenticate over SMTP it's trivial to integrate it wi
 
 ```
     gogs-mailcow:
-	  image: gogs/gogs
-	  volumes:
-	    - ./data/gogs:/data
-	  networks:
-	    mailcow-network:
-		  ipv4_address: 172.22.1.123
-		  aliases:
-		    - gogs
-	  ports:
-	    - "${GOGS_SSH_PORT:-50022}:22"
-		- "${GOGS_WWW_PORT:-50080}:3000"
-	  dns:
-	    - 172.22.1.254
+      image: gogs/gogs
+      volumes:
+        - ./data/gogs:/data
+      networks:
+        mailcow-network:
+          ipv4_address: 172.22.1.123
+          aliases:
+            - gogs
+      ports:
+        - "${GOGS_SSH_PORT:-50022}:22"
+        - "${GOGS_WWW_PORT:-50080}:3000"
+      dns:
+        - 172.22.1.254
 
 ```
 
 2\. Open `data/conf/nginx/site.conf` and add in each `server{}` block
 ```
 location /gogs/ {
-	proxy_pass http://172.22.1.123:3000/;
+    proxy_pass http://172.22.1.123:3000/;
 }
 ```
 
 3\. Open `mailcow.conf` and define ports you want gogs to open, as well as future database password. Example:
 
 ```
-GOGS_WWW_PORT=4000
-GOGS_SSH_PORT=3000
+GOGS_WWW_PORT=3000
+GOGS_SSH_PORT=4000
 DBGOGS=CorrectHorseBatteryStaple
 ```
 
